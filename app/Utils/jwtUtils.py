@@ -48,3 +48,4 @@ def validate_token(token: str) -> str:
             status_code=HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error while validating JWT !"
         )
+

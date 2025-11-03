@@ -103,3 +103,5 @@ async def google_callback(request: Request) -> AuthResponse:
             status_code=HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Something went wrong !"
         )
+
+

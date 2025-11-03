@@ -10,6 +10,7 @@ import os
 load_dotenv()
 
 # Router imports
+from app.Router.FileUpload import FileRouter
 from app.Router.Auth import AuthRouter
 
 # Server object
@@ -44,6 +45,9 @@ def root_route():
 # Routers
 # Auth router
 app.include_router(AuthRouter, prefix="/api/v1/auth", tags=["auth"])
+
+# File upload router
+app.include_router(FileRouter, prefix="/api/v1/file", tags=["FileUpload"])
 
 # Entry point
 if __name__ == "__main__":
