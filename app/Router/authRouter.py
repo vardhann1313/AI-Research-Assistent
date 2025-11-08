@@ -4,9 +4,9 @@ from authlib.integrations.starlette_client import OAuth
 from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
 
 # Custom imports
-from app.Models.user import User
+from app.Models.userModel import User
 from app.Models.DTO import AuthResponse, UserLogin, UserSignup
-from app.Service.Auth import loginService, signupService
+from app.Service.authService import loginService, signupService
 from app.Utils.dbUtlis import DB
 from app.Utils.jwtUtils import create_token
 

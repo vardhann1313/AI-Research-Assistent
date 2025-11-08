@@ -10,8 +10,8 @@ import os
 load_dotenv()
 
 # Router imports
-from app.Router.FileUpload import FileRouter
-from app.Router.Auth import AuthRouter
+from app.Router.chatRouter import ChatRouter
+from app.Router.authRouter import AuthRouter
 
 # Server object
 app = FastAPI(
@@ -47,7 +47,7 @@ def root_route():
 app.include_router(AuthRouter, prefix="/api/v1/auth", tags=["auth"])
 
 # File upload router
-app.include_router(FileRouter, prefix="/api/v1/file", tags=["FileUpload"])
+app.include_router(ChatRouter, prefix="/api/v1/chat", tags=["chat"])
 
 # Entry point
 if __name__ == "__main__":

@@ -2,7 +2,7 @@ import os
 import uuid
 from fastapi import UploadFile, HTTPException
 from starlette.status import HTTP_400_BAD_REQUEST
-from app.Config.fileUploadConfig import UPLOAD_DIR
+from app.Config.directoryConfig import UPLOAD_DIR
 
 # Allowed extentions
 ALLOWED_EXTENTIONS = {".pdf", ".txt", ".docx"}
@@ -47,4 +47,3 @@ async def save_file(file: UploadFile):
         "path": file_path,
         "content_type": file.content_type 
     }
-
