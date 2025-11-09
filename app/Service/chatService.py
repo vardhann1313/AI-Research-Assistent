@@ -1,5 +1,4 @@
 # Inbuilt module imports
-from crewai import Task
 from fastapi.responses import JSONResponse
 from starlette.status import HTTP_200_OK, HTTP_202_ACCEPTED, HTTP_404_NOT_FOUND, HTTP_500_INTERNAL_SERVER_ERROR
 from fastapi import HTTPException, UploadFile
@@ -8,6 +7,7 @@ from bson.objectid import ObjectId
 # Custom module imports 
 from app.Agents.agent import ask_agent, get_agent_with_tools
 from app.Agents.ragChain import get_retriever, process_chat_document
+from app.Agents.utilityFunctions import generate_chat_title, generate_greet_msg
 from app.Models.chatModel import ChatSession, Message
 from app.Utils.dbUtlis import DB
 from app.Utils.jwtUtils import validate_token
@@ -25,7 +25,7 @@ async def new_chat_service(token: str, file: UploadFile):
         result = await save_file(file=file)
 
         # Create new chat in db
-        new_chat = ChatSession(user_email=email, title="Dummy title", filepath=result["path"], message=[])
+        new_chat = ChatSession(user_email=email, title="Dummy", filepath=result["path"], message=[])
         output = await DB["chats"].insert_one(new_chat.model_dump())
 
         # Extract filepath & chat Id / chat session Id and send back
@@ -35,6 +35,18 @@ async def new_chat_service(token: str, file: UploadFile):
         # Call embedding function to create chunks or doc and save embeddings in vectorDB
         ragOutput = process_chat_document(file_path=filepath, chat_id=chat_id)
 
+        # Generate greet msg
+        greetMsg = await generate_greet_msg(chat_id=chat_id)
+        welcomeMsg = Message(role="Assistent", content=greetMsg)
+
+        # Update both in chat
+        await DB["chats"].update_one(
+            {"_id": ObjectId(chat_id)},
+            {
+                "$push": {"message": welcomeMsg.model_dump()}
+            }
+        )
+
         # Return response
         return JSONResponse(
             status_code=HTTP_202_ACCEPTED,
@@ -42,7 +54,10 @@ async def new_chat_service(token: str, file: UploadFile):
                 "message": "Context uploaded succesfully !",
                 "chunk_len": ragOutput["chunk_len"],
                 "success": True,
-                "chat_id": chat_id
+                "chat_info": {
+                    "chat_id": chat_id,
+                    "welcomeMsg": greetMsg
+                }
             }
         )
 
@@ -74,8 +89,10 @@ async def ask_model_service(chat_id: str, question: str):
         answer = agent_output.raw
 
         # Save question and answer in chat
-        new_message = [Message(role="You", content=question).model_dump(),
+        # Prepare message
+        new_message = [Message(role="User", content=question).model_dump(),
                        Message(role="Assistent", content=answer).model_dump()]
+        # Save message in chat
         result = await DB["chats"].update_one(
             {"_id": ObjectId(chat_id)},
             {"$push": {"message": {"$each": list(new_message)}}}
@@ -107,5 +124,4 @@ async def ask_model_service(chat_id: str, question: str):
             status_code=HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Something went wrong in ask_model_service !"
         )
-
 

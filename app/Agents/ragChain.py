@@ -86,8 +86,8 @@ def get_retriever(chat_id: str):
             collection_name=chat_id
         )
 
-        # Return retriever
-        return vectorDB.as_retriever(search_kwargs={"k":4})
+        # Return retriever with k=2 to get only top 2 most relevant documents
+        return vectorDB.as_retriever(search_kwargs={"k": 2})
 
     # Handle exceptions
     except HTTPException:
