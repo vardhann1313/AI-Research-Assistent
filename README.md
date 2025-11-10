@@ -57,18 +57,24 @@ AI Research Assistant is a high-performance web service that allows users to upl
 
 ## API Endpoints
 
-### Authentication
-- `POST /api/v1/auth/register` - Register a new user
-- `POST /api/v1/auth/login` - User login
-- `POST /api/v1/auth/refresh` - Refresh access token
-- `POST /api/v1/auth/logout` - User logout
+### Authentication (`/api/v1/auth`)
+- `GET /check` - Router health check
+- `POST /signup` - Create a new user
+- `POST /login` - Login and receive a JWT
+- `GET /google` - Initiate Google OAuth
+- `GET /google/callback` - Google OAuth callback
 
-### Chat & Documents
-- `POST /api/v1/chat/new_chat` - Start a new chat session with a document
-- `GET /api/v1/chat/ask/{chat_id}` - Ask a question about the document
+### Chat & Documents (`/api/v1/chat`)
+- `POST /new_chat` - Start a new chat session by uploading a document
+  - Auth: Bearer token required (Authorization: Bearer <token>)
+  - Body: multipart/form-data with `file` (.pdf, .txt, .docx)
+  - Response: chat_id and a welcome message
+- `GET /ask/{chat_id}` - Ask a question about the uploaded document
+  - Auth: Bearer token required
+  - Query: `question` (string)
 
-### Agent Management
-- `GET /api/v1/agent/health_check` - Check agent health and stats
+### Agent Management (`/api/v1/agent`)
+- `GET /health_check` - Current and max agent pool info
 
 ## Project Setup
 
@@ -100,15 +106,21 @@ AI Research Assistant is a high-performance web service that allows users to upl
    Create a `.env` file in the project root with the following variables:
    ```env
    # Database
-   MONGODB_URI=mongodb://localhost:27017/ai_research
-   
-   # JWT Authentication
-   JWT_SECRET_KEY=your-secret-key-here
-   ACCESS_TOKEN_EXPIRE_MINUTES=30
-   REFRESH_TOKEN_EXPIRE_DAYS=7
-   
-   # AI/ML Services
+   MONGO_URL=mongodb://localhost:27017
+
+   # FastAPI sessions
+   SESSION_SECRET_KEY=replace-with-a-random-secret
+
+   # JWT
+   JWT_SECRET_KEY=replace-with-a-random-secret
+   JWT_ALGORITHM=HS256
+
+   # LLM (Gemini via CrewAI)
    GEMINI_API_KEY=your-gemini-api-key
+
+   # Google OAuth (optional)
+   GOOGLE_CLIENT_ID=your-google-client-id
+   GOOGLE_CLIENT_SECRET=your-google-client-secret
    ```
 
 5. **Run the application**
@@ -123,24 +135,36 @@ AI Research Assistant is a high-performance web service that allows users to upl
 ## Project Structure
 
 ```
-AI-Research-Assistant/
+AI-Research Assistant/
 ├── app/
-│   ├── Agents/           # AI agent implementations
-│   │   ├── agent.py            # Main agent interface
-│   │   ├── agent_utils.py      # Agent creation utilities
-│   │   ├── agentManager.py     # Agent lifecycle management
-│   │   ├── agentTools.py       # Custom tools for agents
-│   │   ├── ragChain.py         # RAG implementation
-│   │   └── utilityFunctions.py # Helper functions
-│   ├── Config/           # Configuration files
-│   ├── Models/           # Database models and DTOs
-│   ├── Router/           # API route definitions
-│   ├── Service/          # Business logic
-│   └── Utils/            # Utility functions
-├── tests/                # Test files
-├── .env                  # Environment variables
-├── main.py               # Application entry point
-└── pyproject.toml        # Project metadata and dependencies
+│   ├── Agents/
+│   │   ├── agent.py
+│   │   ├── agentManager.py
+│   │   ├── agentTools.py
+│   │   ├── agent_utils.py
+│   │   ├── ragChain.py
+│   │   └── utilityFunctions.py
+│   ├── Config/
+│   │   └── directoryConfig.py
+│   ├── Models/
+│   │   ├── DTO.py
+│   │   ├── chatModel.py
+│   │   └── userModel.py
+│   ├── Router/
+│   │   ├── agentRouter.py
+│   │   ├── authRouter.py
+│   │   └── chatRouter.py
+│   ├── Service/
+│   │   ├── authService.py
+│   │   └── chatService.py
+│   └── Utils/
+│       ├── dbUtlis.py
+│       ├── fileUtils.py
+│       ├── jwtUtils.py
+│       ├── passwordUtils.py
+│       └── textUtils.py
+├── main.py
+└── pyproject.toml
 ```
 
 ## Development

@@ -1,7 +1,7 @@
 import os
 from fastapi import APIRouter, HTTPException, Request
 from authlib.integrations.starlette_client import OAuth
-from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
+from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR, HTTP_400_BAD_REQUEST
 
 # Custom imports
 from app.Models.userModel import User
