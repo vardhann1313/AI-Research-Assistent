@@ -1,27 +1,58 @@
-from crewai import Crew, Task
-from app.Agents.agent_utils import create_agent
-from app.Agents.agentManager import agent_manager
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_classic.chains.combine_documents import create_stuff_documents_chain
+from langchain_classic.chains.retrieval import create_retrieval_chain
+
+# Custom imports
+from app.Agents.ragChain import get_retriever
+
+# Create llm
+import os
+
+from app.Agents.tools import get_chat_history
+llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", api_key=os.getenv("GEMINI_API_KEY"))
+
+# Create ChatPromptTemplate
+prompt = ChatPromptTemplate.from_template(
+    """
+        Answer the following question based on the provided context, last 6 messages and your basic knowledge.
+        Think step by step before providing a detailed answer.
+
+        <chat_history>
+            {chat_history}
+        </chat_history>
+
+        <context>
+            Context: {context}
+        </context>
+        Question: {input}
+    """
+)
+
+# Create a document chain
+document_chain = create_stuff_documents_chain(llm=llm, prompt=prompt)
 
 # Function to be used by every function to ask to agent
 async def ask_agent(chat_id: str, question: str):
 
     # Get agent
-    agent = await agent_manager.get_agent(chat_id=chat_id)
+    retriever = get_retriever(chat_id=chat_id)
 
-    # Prepare task for agent
-    task = Task(
-        description=question,
-        expected_output="A helpful and accurate answer to the user's question",
-        agent=agent,
+    # Create a retrieval chain
+    retrieval_chain = create_retrieval_chain(
+        retriever=retriever,
+        combine_docs_chain=document_chain
     )
 
-    # Create crew 
-    crew = Crew(
-        agents=[agent],
-        tasks=[task],
-        verbose=False,
-    )
+    # Create chat history
+    chat_history = await get_chat_history(chat_id=chat_id)
 
-    # Run crew
-    return await crew.kickoff_async()
+    # Invoke retrieval chain
+    response = await retrieval_chain.ainvoke({
+        "input": question,
+        "chat_history": chat_history
+    })
+    
+    return response['answer']
+
 

@@ -7,7 +7,6 @@ from bson.objectid import ObjectId
 # Custom module imports 
 from app.Agents.agent import ask_agent
 from app.Agents.ragChain import process_chat_document
-from app.Agents.utilityFunctions import generate_greet_msg
 from app.Models.chatModel import ChatSession, Message
 from app.Utils.dbUtlis import DB
 from app.Utils.jwtUtils import validate_token
@@ -35,9 +34,8 @@ async def new_chat_service(token: str, file: UploadFile):
         # Call embedding function to create chunks or doc and save embeddings in vectorDB
         ragOutput = process_chat_document(file_path=filepath, chat_id=chat_id)
 
-        # Generate greet msg
-        greetMsg = await generate_greet_msg(chat_id=chat_id)
-        welcomeMsg = Message(role="Assistent", content=greetMsg)
+        # Create greet msg
+        welcomeMsg = Message(role="Assistent", content="Hey, How can i help you ?")
 
         # Update both in chat
         await DB["chats"].update_one(
@@ -56,7 +54,7 @@ async def new_chat_service(token: str, file: UploadFile):
                 "success": True,
                 "chat_info": {
                     "chat_id": chat_id,
-                    "welcomeMsg": greetMsg
+                    "welcomeMsg": "Hey, How can i help you ?"
                 }
             }
         )
@@ -85,8 +83,7 @@ async def ask_model_service(chat_id: str, question: str):
             )
 
         # Ask model with context (Issue in ragChain file with imports)
-        agent_output = await ask_agent(chat_id=chat_id, question=question)
-        answer = agent_output.raw
+        answer = await ask_agent(chat_id=chat_id, question=question)
 
         # Save question and answer in chat
         # Prepare message

@@ -10,7 +10,6 @@ import os
 load_dotenv()
 
 # Router imports
-from app.Router.agentRouter import AgentRouter
 from app.Router.chatRouter import ChatRouter
 from app.Router.authRouter import AuthRouter
 
@@ -49,9 +48,6 @@ app.include_router(AuthRouter, prefix="/api/v1/auth", tags=["auth"])
 
 # File upload router
 app.include_router(ChatRouter, prefix="/api/v1/chat", tags=["chat"])
-
-# Agent check router
-app.include_router(AgentRouter, prefix="/api/v1/agent", tags=["agent"])
 
 # Entry point
 if __name__ == "__main__":
